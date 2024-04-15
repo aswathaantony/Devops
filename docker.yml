@@ -1,0 +1,59 @@
+---
+- hosts: ec2-instance
+
+  become: true
+  tasks:
+    - name: Install required system packages
+      apt:
+        pkg:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+          - python3-pip
+          - virtualenv
+          - python3-setuptools
+        state: latest
+        update_cache: true
+
+    - name: Add Docker GPG apt Key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      apt_repository:
+        repo: deb https://download.docker.com/linux/ubuntu focal stable
+        state: present
+
+    - name: Update apt and install docker-ce and docker-compose
+      apt:
+        pkg:
+          - docker-ce
+          - docker-compose
+        state: latest
+        update_cache: true
+
+    - name: Install Docker Module for Python
+      pip:
+        name: docker
+    - name: "Creating folder and copying html file"
+      file:
+        path: "/myfile"
+        state: directory
+    - name: "Copying local files"
+      copy:
+        src: "index.html"
+        dest: "/myfile/"
+    - name: Creating container using HTTPD Image
+      docker_container:
+        name: "MyWebServer3"
+        image: "httpd"
+        state: started
+        exposed_ports:
+        - "80"
+        ports:
+        - "80:80"
+        volumes:
+        - /myfile:/usr/local/apache2/htdocs/
+
